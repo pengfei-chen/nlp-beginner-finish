@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+# TODO 目前任务是：修改TF1到TF2
 
 class LrModel(object):
     def __init__(self, config, seq_length):
@@ -8,7 +9,8 @@ class LrModel(object):
         self.lr()
 
     def lr(self):
-        self.x = tf.placeholder(tf.float32, [None, self.seq_length])
+        # self.x = tf.placeholder(tf.float32, [None, self.seq_length])
+        self.x = tf.constant(range(self.seq_length))
         w = tf.Variable(tf.zeros([self.seq_length, self.config.num_classes]))
         b = tf.Variable(tf.zeros([self.config.num_classes]))
 

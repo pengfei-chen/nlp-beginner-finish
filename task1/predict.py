@@ -1,5 +1,5 @@
 import tensorflow as tf
-from sklearn.externals import joblib
+import joblib
 import jieba
 from config.lr_config import LrConfig
 from lr_model import LrModel
