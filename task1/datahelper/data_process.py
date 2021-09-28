@@ -1,3 +1,4 @@
+from re import A
 from config.lr_config import LrConfig
 from sklearn import model_selection
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -5,6 +6,7 @@ from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 import joblib
 import jieba
 import numpy as np
+import time
 
 config = LrConfig()
 
@@ -76,9 +78,16 @@ class DataProcess(object):
         data, stopwords = self.read_data()
         #  1、提取bag of word参数
         #  2、提取tf-idf特征参数
-        X_train, X_test, y_train, y_test = self.pre_data(data, stopwords, test_size=0.2)
+        a = time.time()
+        print("***provide_data：1***")
+        X_train, X_test, y_train, y_test = self.pre_data(data, stopwords, test_size=0.2) #卡在这里
+        b = time.time() - a
+        print(b)
+        print("***provide_data：2***")
         X_train_vec, X_test_vec, vectorizer = self.get_tfidf(X_train, X_test)
+        print("***provide_data：3***")
         joblib.dump(vectorizer, self.model_save_path)
+        print("***provide_data：4***")
         #  3、提取word2vec特征参数
         return X_train_vec, X_test_vec, y_train, y_test
 
@@ -86,13 +95,10 @@ class DataProcess(object):
         """迭代器，将数据分批传给模型"""
         data_len = len(x)
         num_batch = int((data_len-1)/batch_size)+1
-        indices = np.random.permutation(np.arange(data_len))
+        indices = np.random.permutation(np.arange(data_len))  # 随机排序
         x_shuffle = x[indices]
         y_shuffle = y[indices]
         for i in range(num_batch):
             start_id = i*batch_size
             end_id = min((i+1)*batch_size, data_len)
             yield x_shuffle[start_id: end_id], y_shuffle[start_id: end_id]
-
-
-

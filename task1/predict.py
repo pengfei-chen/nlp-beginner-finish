@@ -25,13 +25,9 @@ def read_categories():
     return categories[0].split('|')
 
 
-def predict_line(data, categories):
+def predict_line(X_test, categories):
     """预测结果"""
-    session = tf.Session()
-    session.run(tf.global_variables_initializer())
-    saver = tf.train.Saver()
-    saver.restore(sess=session, save_path=config.lr_save_path)
-    y_pred_cls = session.run(model.y_pred_cls, feed_dict={model.x: data})
+    y_pred_cls = model.y_pred_cls
     return categories[y_pred_cls[0]]
 
 
@@ -41,6 +37,7 @@ if __name__ == "__main__":
     line = pre_data(data, config)
     tfidf_model = joblib.load(config.tfidf_model_save_path)
     X_test = tfidf_model.transform(line).toarray()
-    model = LrModel(config, len(X_test[0]))
+    lst = [[0,0,1,0,0,0,0,0,0,0]]
+    model = LrModel(config, len(X_test[0]), X_test, y=lst)
     categories = read_categories()
     print(predict_line(X_test, categories))
