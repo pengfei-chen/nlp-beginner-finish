@@ -22,6 +22,7 @@ def evaluate(x_, y_ ,model):
     for batch_xs, batch_ys in batch_eval:
         batch_len = len(batch_xs)
         # loss, acc = sess.run([model.loss, model.accuracy], feed_dict={model.x: batch_xs, model.y_: batch_ys})
+        model.lr(batch_xs, batch_ys)
         loss, acc = model.loss, model.accuracy
         total_loss += loss * batch_len
         total_acc += acc * batch_len
@@ -48,8 +49,8 @@ def train(X_train, X_test, y_train, y_test):
     last_improved = 0  # 记录上一次提升批次
     require_improvement = 1000  # 如果超过1000轮未提升，提前结束训练
     flag = False
-    w = tf.Variable(tf.random.normal(shape=(seq_length, config.num_classes),dtype=tf.float32))
-    b = tf.Variable(tf.random.normal(shape=[config.num_classes],dtype=tf.float32))
+    # 初始化 w, b
+    model = LrModel(config, seq_length)  # 修改，放到这里来，还会每次都传入w,b嘛？
     for step in range(config.num_epochs):  #step没有使用上
         print(step)
         batch_train = data_get.batch_iter(X_train, y_train)
@@ -58,9 +59,7 @@ def train(X_train, X_test, y_train, y_test):
             # 有时间来修改这里吧，学习怎么保存模型的参数，不每次都初始化，应该能提升 ACC
             # model = LrModel(config, seq_length, batch_xs, batch_ys,w,b)
             if total_batch % config.print_per_batch == 0:
-                # loss_train, acc_train = sess.run([model.loss, model.accuracy], feed_dict={model.x: X_train, model.y_: y_train})
-                model = LrModel(config, seq_length, batch_xs, batch_ys,w,b)  # 修改，放到这里来，还会每次都传入w,b嘛？
-                print("w,b:",(w,b))
+                # loss_train, acc_train = sess.run([model.loss, model.accuracy], feed_dict={model.x: X_train, model.y_: y_train}
                 loss_train, acc_train = model.loss, model.accuracy
                 loss_val, acc_val = evaluate(X_test, y_test, model)
 
@@ -70,9 +69,12 @@ def train(X_train, X_test, y_train, y_test):
                     # 保存最好结果
                     best_acc_val = acc_val
                     last_improved = total_batch
-                    # saver.save(sess=sess, save_path=config.lr_save_path)
                     # 保存模型
                     # model.save('best_model',save_format='tf', save_path=config.lr_save_path)
+                    try:
+                        model.save_weights("task1.h5")
+                    except:
+                        pass
                     """
                     保存模型为 pb格式
                     model.save('path_to_my_model',save_format='tf')
@@ -87,6 +89,8 @@ def train(X_train, X_test, y_train, y_test):
                         + 'Val Loss: {3:>6.2}, Val Acc: {4:>7.2%}, Time: {5} {6}'
                 print(msg.format(total_batch, loss_train, acc_train, loss_val, acc_val, time_dif, improve_str))
             # sess.run(model.train_step, feed_dict={model.x: batch_xs, model.y_: batch_ys})
+            # 这里才是更新梯度 
+            model.lr(batch_xs, batch_ys)
             total_batch += 1
 
             if total_batch - last_improved > require_improvement:

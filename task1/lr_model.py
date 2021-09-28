@@ -3,13 +3,14 @@ import tensorflow as tf
 # TODO 目前任务是：修改TF1到TF2
 
 class LrModel(object):
-    def __init__(self, config, seq_length, x, y, batch_size=1):
+    def __init__(self, config, seq_length):
         self.config = config
         self.seq_length = seq_length
-        self.x = x
-        self.y = y
-        self.batch_size = batch_size
-        self.lr()
+        self.w = tf.Variable(tf.random.normal(shape=(self.seq_length, config.num_classes),dtype=tf.float32))
+        self.b = tf.Variable(tf.random.normal(shape=[config.num_classes],dtype=tf.float32))
+        self.loss = 0.0
+        self.accuracy = 0.0
+        # self.lr()
 
     # def lr(self):
     #     self.x = tf.placeholder(tf.float32, [None, self.seq_length])
@@ -34,29 +35,34 @@ class LrModel(object):
     #     correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(self.y_, 1))  # True 或者 False
     #     self.accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))   # tf.cast 转换 True 为 1
  
-    def lr(self):
+    def lr(self,x,y):
+        """
+        y 是数据传入的 y 
+        y_  是根据w,b 计算出来的 y_ 值
+        """
         # 是根据输入的 x 判断，现在的类别嘛？
-        self.x = tf.Variable(self.x,dtype=tf.float32)
-        y = tf.nn.softmax(tf.matmul(self.x, w) + b)
-        self.y_pred_cls = tf.argmax(y, 1)
+        x = tf.Variable(x,dtype=tf.float32)
+        y_ = tf.nn.softmax(tf.matmul(x, self.w) + self.b)
+        self.y_pred_cls = tf.argmax(y_, 1)
         
         def linreg(x, w, b):
             return tf.matmul(x, w) + b
         def loss(y, y_):
             return -tf.reduce_sum(y * tf.math.log(y_))
             
-        cross_entropy = tf.reduce_mean(loss(self.y, y))
+        cross_entropy = tf.reduce_mean(loss(y, y_))
         self.loss = tf.reduce_mean(cross_entropy)
         
-        def sgd(params, lr, batch_size, grads):
+        def sgd(params, lr, grads):
             for i,param in enumerate(params):
-                param.assign_sub(lr * grads[i]/batch_size)
+                param.assign_sub(lr * grads[i])  #更新参数
         with tf.GradientTape() as t:
-            t.watch([w,b])
-            l = tf.reduce_sum(loss(self.y, linreg(self.x, w, b)))
-        grads = t.gradient(l, [w,b])
-        sgd([w,b], 0.5, self.batch_size, grads)
+            t.watch([self.w,self.b])
+            l = tf.reduce_sum(loss(y, linreg(x, self.w, self.b)))  #这一步很重要，x是变量，把它表述成关于x的表达式
+        grads = t.gradient(l, [self.w,self.b])
+        # 学习率是0.5时，val acc 最高47.5%：扩大学习率试下
+        sgd([self.w,self.b], 1.5, grads)
 
-        correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(self.y, 1))
+        correct_prediction = tf.equal(tf.argmax(y_, 1), tf.argmax(y, 1))
         self.accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
