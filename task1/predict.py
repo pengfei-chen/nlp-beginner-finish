@@ -38,7 +38,7 @@ if __name__ == "__main__":
     tfidf_model = joblib.load(config.tfidf_model_save_path)
     X_test = tfidf_model.transform(line).toarray()
     lst = [[0,0,1,0,0,0,0,0,0,0]]
-    model = LrModel(config, len(X_test[0]), )
+    model = LrModel(config, len(X_test[0]))
     model.lr(X_test,lst)
     categories = read_categories()
     print(predict_line(X_test, categories))

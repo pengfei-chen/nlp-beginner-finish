@@ -93,13 +93,14 @@ def train(X_train, X_test, y_train, y_test):
             model.lr(batch_xs, batch_ys)
             total_batch += 1
 
-            if total_batch - last_improved > require_improvement:
-                #  验证集准确率长期不提升，提前结束训练
-                print("No optimization for a long time, auto-stopping...")
-                flag = True
-                break
-        if flag:
-            break
+        # 不停止，跑起来看下效果
+        #     if total_batch - last_improved > require_improvement:
+        #         #  验证集准确率长期不提升，提前结束训练
+        #         print("No optimization for a long time, auto-stopping...")
+        #         flag = True
+        #         break
+        # if flag:
+        #     break
 
 
 # TODO:后续有需要再做
