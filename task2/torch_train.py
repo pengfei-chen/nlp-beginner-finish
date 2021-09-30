@@ -19,6 +19,7 @@ def evaluate(model, Loss, x_val, y_val):
     los = 0
     for x_batch, y_batch in batch_val:
         size = len(x_batch)
+        # 处理格式，这里很容易出错的，要重视
         x = np.array(x_batch)
         y = np.array(y_batch)
         x = torch.LongTensor(x)
@@ -31,26 +32,29 @@ def evaluate(model, Loss, x_val, y_val):
         # optimizer.zero_grad()
         # loss.backward()
         # optimizer.step()
+        # 简单来说detach就是截断反向传播的梯度流。
         loss_value = np.mean(loss.detach().numpy())
+        # torch.argmax(out,1) 按行，求这一行值最大的索引
         accracy = np.mean((torch.argmax(out, 1) == torch.argmax(y, 1)).numpy())
         acc +=accracy*size
         los +=loss_value*size
     return los/len(x_val), acc/len(x_val)
 
 
-base_dir = 'cnews'
+base_dir = r'E:\deeplearning_data\nlp-beginner-finish_data\cnews'
 train_dir = os.path.join(base_dir, 'cnews.train.txt')
 test_dir = os.path.join(base_dir, 'cnews.test.txt')
 val_dir = os.path.join(base_dir, 'cnews.val.txt')
 vocab_dir = os.path.join(base_dir, 'cnews.vocab.txt')
 
 def train():
-    x_train, y_train = process_file(train_dir, word_to_id, cat_to_id,600)#获取训练数据每个字的id和对应标签的oe-hot形式
+    x_train, y_train = process_file(train_dir, word_to_id, cat_to_id,600)#获取训练数据每个字的id和对应标签的one-hot形式
     x_val, y_val = process_file(val_dir, word_to_id, cat_to_id,600)
     #使用LSTM或者CNN
     model = TextRNN()
     # model = TextCNN()
     #选择损失函数
+    # TODO 注意学些这里的使用
     Loss = nn.MultiLabelSoftMarginLoss()
     # Loss = nn.BCELoss()
     # Loss = nn.MSELoss()
@@ -72,13 +76,15 @@ def train():
             # y = Variable(y)
             out = model(x)
             loss = Loss(out,y)
+            # TODO 注意这里的操作！
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
             # 对模型进行验证
+            # 学习下这里保存模型的方式
             if i % 90 == 0:
-                los, accracy = evaluate(model, Loss, optimizer, x_val, y_val)
+                los, accracy = evaluate(model, Loss, x_val, y_val)
                 print('loss:{},accracy:{}'.format(los, accracy))
                 if accracy > best_val_acc:
                     torch.save(model.state_dict(), 'model_params.pkl')

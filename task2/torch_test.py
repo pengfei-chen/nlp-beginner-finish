@@ -3,7 +3,8 @@
 from __future__ import print_function
 
 import os
-import tensorflow.contrib.keras as kr
+# import tensorflow.contrib.keras as kr
+import keras as kr
 import torch
 from torch import nn
 from cnews_loader import read_category, read_vocab
@@ -11,10 +12,10 @@ from torch_model import TextCNN,TextRNN
 from torch.autograd import Variable
 import numpy as np
 
-try:
-    bool(type(unicode))
-except NameError:
-    unicode = str
+# try:
+#     bool(type(unicode))
+# except NameError:
+#     unicode = str
 
 base_dir = 'cnews'
 vocab_dir = os.path.join(base_dir, 'cnews.vocab.txt')
@@ -29,7 +30,7 @@ class CnnModel:
 
     def predict(self, message):
         # 支持不论在python2还是python3下训练的模型都可以在2或者3的环境下运行
-        content = unicode(message)
+        content = message
         data = [self.word_to_id[x] for x in content if x in self.word_to_id]
         data = kr.preprocessing.sequence.pad_sequences([data], 600)
         data = torch.LongTensor(data)
@@ -48,7 +49,7 @@ class RnnModel:
 
     def predict(self, message):
         # 支持不论在python2还是python3下训练的模型都可以在2或者3的环境下运行
-        content = unicode(message)
+        content = message
         data = [self.word_to_id[x] for x in content if x in self.word_to_id]
         data = kr.preprocessing.sequence.pad_sequences([data], 600)
         data = torch.LongTensor(data)
@@ -65,5 +66,3 @@ if __name__ == '__main__':
                  '热火vs骑士前瞻：皇帝回乡二番战 东部次席唾手可得新浪体育讯北京时间3月30日7:00']
     for i in test_demo:
         print(i,":",model.predict(i))
-
-

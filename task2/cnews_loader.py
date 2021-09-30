@@ -1,18 +1,28 @@
 # coding: utf-8
 
 import sys
+import importlib
 from collections import Counter
 
 import numpy as np
 import tensorflow.keras as kr
 import os
 
-try:
-    reload(sys)
-    sys.setdefaultencoding("utf-8")
-    is_py3 = False
-except NameError:
-    is_py3 = True
+# print(os.path.dirname(__file__))
+"""
+os.path.dirname(__file__)
+获取当前运行python文件的文件地址
+"""
+
+
+is_py3 = True 
+
+# try:
+#     importlib.reload(sys)
+#     sys.setdefaultencoding("utf-8")
+#     is_py3 = False
+# except NameError:
+#     is_py3 = True
 
 
 def native_word(word, encoding='utf-8'):
@@ -136,7 +146,7 @@ def batch_iter(x, y, batch_size=64):
 
 
 if __name__ == '__main__':
-    base_dir = 'cnews'
+    base_dir = r'E:\deeplearning_data\nlp-beginner-finish_data\cnews'
     train_dir = os.path.join(base_dir, 'cnews.train.txt')
     test_dir = os.path.join(base_dir, 'cnews.test.txt')
     val_dir = os.path.join(base_dir, 'cnews.val.txt')
