@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchcrf import CRF
+import pandas as pd
+import numpy  as np
 
 class NERLSTM_CRF(nn.Module):
     def __init__(self, embedding_dim, hidden_dim, dropout, word2id, tag2id):
@@ -37,12 +39,15 @@ class NERLSTM_CRF(nn.Module):
       return outputs
 
     def log_likelihood(self, x, tags):
-        x = x.transpose(0,1)
-        batch_size = x.size(1)
-        sent_len = x.size(0)
-        tags = tags.transpose(0,1)
-        embedding = self.word_embeds(x)
-        outputs, hidden = self.lstm(embedding)
-        outputs = self.dropout(outputs)
-        outputs = self.hidden2tag(outputs)
-        return - self.crf(outputs, tags)
+
+      #这里报错了 
+      # x=torch.unsqueeze(x,0)
+      x = x.transpose(0,1)
+      batch_size = x.size(1)
+      sent_len = x.size(0)
+      tags = tags.transpose(0,1)
+      embedding = self.word_embeds(x)
+      outputs, hidden = self.lstm(embedding)
+      outputs = self.dropout(outputs)
+      outputs = self.hidden2tag(outputs)
+      return - self.crf(outputs, tags)

@@ -45,10 +45,10 @@ class EmbeddingLayer(nn.Module):
         super(EmbeddingLayer, self).__init__()
 
         self.vector_size = vector_size
-        self.embed = nn.Embedding(vocab_size, vector_size)
+        self.embed = nn.Embedding(vocab_size, vector_size)  #随机初始化embedding
         self.dropout = VariationalDropout(dropout)
 
-    def load(self, vectors):
+    def load(self, vectors): # vectors是预训练模型的参数？ 向量？
         """Load pre-trained embedding weights.
         Arguments:
             vectors {torch.Tensor} -- from "TEXT.vocab.vectors".
@@ -60,7 +60,8 @@ class EmbeddingLayer(nn.Module):
         Arguments:
             x {torch.Tensor} -- input tensor with shape [batch_size, seq_length]
         """
-        e = self.embed(x)
+        e = self.embed(x)  
+        # 得到的 e 的维度：batch_size, seq_length:句子长度, embedding_dim:每个单词的embedding维度
         return self.dropout(e)
 
 class EncodingLayer(nn.Module):
@@ -68,9 +69,14 @@ class EncodingLayer(nn.Module):
     """
     def __init__(self, input_size, hidden_size):
         super(EncodingLayer, self).__init__()
+        """
+        input_size 输入数据的特征维数，通常就是embedding_dim(词向量的维度)
+        hidden_size　LSTM中隐层的维度
+        num_layers　循环神经网络的层数
+        """
         self.lstm = nn.LSTM(input_size, hidden_size,
                             num_layers=1,
-                            bidirectional=True)
+                            bidirectional=True) # bidirectional=True ：双向 LSTM
 
     def forward(self, x):
         """
@@ -79,11 +85,11 @@ class EncodingLayer(nn.Module):
         Returns:
             output {torch.Tensor} -- [batch, seq_len, num_directions * hidden_size]
         """
-        self.lstm.flatten_parameters()
+        self.lstm.flatten_parameters() #TODO 这一句的作用是啥？
         output, _ = self.lstm(x)
         return output
 
-class LocalInferenceModel(nn.Module):
+class LocalInferenceModel(nn.Module): # 本地推理模型
     """The local inference model introduced in the paper.
     """
     def __init__(self):
@@ -114,8 +120,12 @@ class LocalInferenceModel(nn.Module):
         h_score, p_score = self.softmax_1(e), self.softmax_2(e)
         h_ = h_score.transpose(1, 2).bmm(p)
         p_ = p_score.bmm(h)
+        """
+        计算两个tensor的矩阵乘法,注意两个tensor的维度必须为3.
+        """
 
         # equation 14 & 15 in the paper:
+        # 这里要看原论文，才能搞懂
         m_p = torch.cat((p, p_, p - p_, p * p_), dim=-1)
         m_h = torch.cat((h, h_, h - h_, h * h_), dim=-1)
 
@@ -126,7 +136,7 @@ class LocalInferenceModel(nn.Module):
         return m_p, m_h
 
 
-class CompositionLayer(nn.Module):
+class CompositionLayer(nn.Module): # 合成层
     """The composition layer.
     """
     def __init__(self, input_size, output_size, hidden_size, dropout=0.5):
@@ -175,20 +185,30 @@ class Pooling(nn.Module):
         Returns:
             v {torch.Tensor} -- [batch, hidden_size * 4]
         """
-        mask_expand = x_mask.unsqueeze(-1).expand(x.shape)
+        mask_expand = x_mask.unsqueeze(-1).expand(x.shape)  # expand(x.shape) 扩展x_mask为x的形状
 
         # average pooling
         x_ = x * mask_expand.float()
+        """
+        torch.sum():
+        在dim这个维度上，对里面的tesnor 进行加和，如果keepdim=False，返回结果会删去dim这个维度。
+        因为在dim上加和之后，dim=1，所以可以直接删去。
+        参见：https://blog.csdn.net/qq_23262411/article/details/100398449
+        直觉请参考上面的链接
+        """
         v_avg = x_.sum(1) / x_mask.sum(-1).unsqueeze(-1).float()
 
         # max pooling
         x_ = x.masked_fill(mask_expand == 0, -1e7)
+        """
+        torch.max():与上面同理
+        """
         v_max = x_.max(1).values
 
         assert v_avg.shape == v_max.shape == (x.shape[0], x.shape[-1])
         return torch.cat((v_avg, v_max), dim=-1)
 
-class InferenceComposition(nn.Module):
+class InferenceComposition(nn.Module): #合成推理的
     """Inference composition described in paper section 3.3
     """
     def __init__(self, input_size, output_size, hidden_size, dropout=0.5):
@@ -320,7 +340,7 @@ class ESIM(nn.Module):
         h_ = self.encoder(h_embeded)
 
         # local inference
-        p_mask, h_mask = (p != 1).long(), (h != 1).long()
+        p_mask, h_mask = (p != 1).long(), (h != 1).long()  # 注意这里获取 mask 的方式
         m_p, m_h = self.inference(p_, h_, p_mask, h_mask)
 
         # inference composition

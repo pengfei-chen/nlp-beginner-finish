@@ -35,6 +35,11 @@ def main(train_file, dev_file, vocab_file, target_dir,
     # embeddings = load_embeddings(embeddings_file)
     model = ESIM(hidden_size, dropout=dropout,
                  num_labels=num_classes, device=device).to(device)
+    """
+    这行代码的意思是将所有最开始读取数据时的tensor变量
+    copy一份到device所指定的GPU上去，之后的运算都在GPU上进行。
+    参见：https://blog.csdn.net/shaopeng568/article/details/95205345
+    """
     # -------------------- Preparation for training  ------------------- #
     print('a')
     criterion = nn.CrossEntropyLoss()
@@ -72,15 +77,17 @@ def main(train_file, dev_file, vocab_file, target_dir,
     # -------------------- Training epochs ------------------- #
     print("\n", 20 * "=", "Training ESIM model on device: {}".format(device), 20 * "=")
     patience_counter = 0
-    for epoch in range(start_epoch, epochs + 1):
+    for epoch in range(start_epoch, epochs + 1): # epochs=50
         epochs_count.append(epoch)
         print("* Training epoch {}:".format(epoch))
+        # 训练模型
         epoch_time, epoch_loss, epoch_accuracy = train(model, train_loader, optimizer,
                                                        criterion, epoch, max_grad_norm)
         train_losses.append(epoch_loss)
         print("-> Training time: {:.4f}s, loss = {:.4f}, accuracy: {:.4f}%"
               .format(epoch_time, epoch_loss, (epoch_accuracy * 100)))
         print("* Validation for epoch {}:".format(epoch))
+        # 评估每个epoch训练完成后的效果
         epoch_time, epoch_loss, epoch_accuracy, epoch_auc = validate(model, dev_loader, criterion)
         valid_losses.append(epoch_loss)
         print("-> Valid. time: {:.4f}s, loss: {:.4f}, accuracy: {:.4f}%, auc: {:.4f}\n"
@@ -101,7 +108,7 @@ def main(train_file, dev_file, vocab_file, target_dir,
                         "train_losses": train_losses,
                         "valid_losses": valid_losses},
                        os.path.join(target_dir, "best.pth.tar"))
-            # Save the model at each epoch.
+        # Save the model at each epoch.
         torch.save({"epoch": epoch,
                     "model": model.state_dict(),
                     "best_score": best_score,
@@ -117,4 +124,8 @@ def main(train_file, dev_file, vocab_file, target_dir,
 
 
 if __name__ == "__main__":
-    main("atec_nlp_sim_train_all.csv", "dev.csv", "vocab.txt", "models")
+    main(r"D:\MyData\chenpf8\nlp-beginner-finish\task3\atec_nlp_sim_train_all.csv",
+     r"D:\MyData\chenpf8\nlp-beginner-finish\task3\dev.csv",
+      r"D:\MyData\chenpf8\nlp-beginner-finish\task3\vocab.txt", "models")
+
+# 感觉学得太浅了。还要反复看这个。

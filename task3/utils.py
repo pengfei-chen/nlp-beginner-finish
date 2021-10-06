@@ -225,15 +225,15 @@ def train(model, dataloader, optimizer, criterion, epoch_number, max_gradient_no
         q2 = h.to(device)
         q2_lengths = h_len.to(device)
         labels = label.to(device)
-        optimizer.zero_grad()
+        optimizer.zero_grad()  #清空过往梯度；
         logits, probs = model(q1, q1_lengths, q2, q2_lengths)
         # print(logits)
         loss = criterion(logits, labels)
-        loss.backward()
-        nn.utils.clip_grad_norm_(model.parameters(), max_gradient_norm)
-        optimizer.step()
+        loss.backward() # 反向传播，计算当前梯度；
+        nn.utils.clip_grad_norm_(model.parameters(), max_gradient_norm) #裁剪梯度
+        optimizer.step() #根据梯度更新网络参数
         batch_time_avg += time.time() - batch_start
-        running_loss += loss.item()
+        running_loss += loss.item() #注意这里
         correct_preds += correct_predictions(probs, labels)
         print(loss.item())
         print(correct_preds)

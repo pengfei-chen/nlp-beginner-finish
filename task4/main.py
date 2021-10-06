@@ -40,10 +40,15 @@ class NERDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
+# Dataset是这么产生的吗~
 train_dataset = NERDataset(x_train, y_train)
 valid_dataset = NERDataset(x_valid, y_valid)
 test_dataset = NERDataset(x_test, y_test)
-
+"""
+在实践中，数据读取经常是训练的性能瓶颈，特别当模型较简单或者计算硬件性能较高时。
+Pytorch的Dataloader中一个很方便的功能是允许使用多进程来加速数据读取，
+我们可以通过num_workers来设置使用几个进程读取数据。
+"""
 train_dataloader = DataLoader(train_dataset, batch_size=opt.batch_size, shuffle=True, num_workers=opt.num_workers)
 valid_dataloader = DataLoader(valid_dataset, batch_size=opt.batch_size, shuffle=True, num_workers=opt.num_workers)
 test_dataloader = DataLoader(test_dataset, batch_size=opt.batch_size, shuffle=True, num_workers=opt.num_workers)
@@ -63,7 +68,8 @@ class ChineseNER(object):
     def train(self):
         for epoch in range(opt.max_epoch):
             model.train()
-            for index, batch in enumerate(train_dataloader):
+            # for index, batch in enumerate(train_dataloader):  10.06修改
+            for index, batch in enumerate(valid_dataloader):
                 optimizer.zero_grad()
                 X = batch['x']
                 y = batch['y']
@@ -79,7 +85,8 @@ class ChineseNER(object):
 
             aver_loss = 0
             preds, labels = [], []
-            for index, batch in enumerate(valid_dataloader):
+            # for index, batch in enumerate(valid_dataloader):  10.06修改
+            for index, batch in enumerate(test_dataloader):
                 model.eval()
                 val_x,val_y = batch['x'], batch['y']
                 predict = model(val_x)
@@ -104,6 +111,10 @@ class ChineseNER(object):
             precision = precision_score(labels, preds, average='macro')
             recall = recall_score(labels, preds, average='macro')
             f1 = f1_score(labels, preds, average='macro')
+            print("+++===+++")
+            print("precision:",precision)
+            print("recall:",recall)
+            print("f1:",f1)
             report = classification_report(labels, preds)
             print(report)
             torch.save(model.state_dict(), './model/params.pkl')
@@ -124,5 +135,6 @@ class ChineseNER(object):
 
 if __name__ == '__main__':
     cn = ChineseNER()
+    # 内存不够，程序报错，暂时不知道修改哪里。。
     cn.train()
     # cn.predict('ns')

@@ -92,3 +92,6 @@ class SoftmaxAttention(nn.Module):
         attended_premises = weighted_sum(hypothesis_batch, prem_hyp_attn, premise_mask)
         attended_hypotheses = weighted_sum(premise_batch, hyp_prem_attn, hypothesis_mask)
         return attended_premises, attended_hypotheses
+        """
+        这里直接看到的 attention 实现，和 transform 的好像是不一样的..
+        """

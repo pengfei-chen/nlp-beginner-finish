@@ -5,7 +5,8 @@ import torch as t
 class DefaultConfig(object):
     model = 'NERLSTM_CRF'  # 使用的模型，名字必须与models/__init__.py中的名字一致
 
-    pickle_path = './renmindata.pkl'  # 训练集存放路径
+    # pickle_path = './renmindata.pkl'  # 训练集存放路径
+    pickle_path = r'task4\renmindata.pkl'
     load_model_path = None  # 加载预训练的模型的路径，为None代表不加载
 
     batch_size = 32  # batch size
