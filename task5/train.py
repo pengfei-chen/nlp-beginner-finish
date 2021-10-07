@@ -28,6 +28,9 @@ class TrainModel(object):
                 # input,target:  (max_len, batch_size-1)
                 input_, target = x[:-1, :], x[1:, :]
                 target = target.view(-1)
+                """
+                X.view(-1)中的-1本意是根据另外一个数来自动调整维度，但是这里只有一个维度，因此就会将X里面的所有维度数据转化成一维的，并且按先后顺序排列。
+                """
                 # 初始化hidden为(c0, h0): ((layer_num， batch_size, hidden_dim)，(layer_num， batch_size, hidden_dim)）
                 hidden = model.init_hidden(self.config.layer_num, x.size()[1])
 
@@ -57,7 +60,7 @@ class TrainModel(object):
 
 
     def run(self):
-        # 1 获取数据
+        # 1 获取数据 #使用了dataHandler里面的方法
         data, char_to_ix, ix_to_chars = get_data(self.config)
         vocab_size = len(char_to_ix)
         print('样本数：%d' % len(data))
@@ -65,6 +68,7 @@ class TrainModel(object):
 
         # 2 设置dataloader
         data = torch.from_numpy(data)
+        # data = data.to(self.device) # 新增的
         data_loader = Data.DataLoader(data,
                                       batch_size=self.config.batch_size,
                                       shuffle=True,

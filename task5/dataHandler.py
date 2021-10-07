@@ -42,7 +42,7 @@ def parse_raw_data(data_path, category, author, constrain):
     def handle_json(file):
         """读入json文件，返回诗句list，每一个元素为一首诗歌(str类型表示)"""
         rst = []
-        data = json.loads(open(file).read())
+        data = json.loads(open(file, encoding='utf-8').read())
         for poetry in data:
             pdata = ""
             if author is not None and poetry.get("author") != author:

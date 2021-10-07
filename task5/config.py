@@ -2,16 +2,16 @@
 
 
 class Config(object):
-    data_path = "./json/"
+    data_path = "task5/json/"
     category = "poet.tang"
     author = None
     constrain = None
     poetry_max_len = 125
     sample_max_len = poetry_max_len-1
-    processed_data_path = "data/tang.npz"
+    processed_data_path = r"task5/data/tang.npz"
     word_dict_path = 'wordDic'
     model_path = 'model/tang_200.pth'
-    model_prefix = 'model/tang'
+    model_prefix = r'task5/model/tang'
 
     batch_size = 128
     epoch_num = 201
